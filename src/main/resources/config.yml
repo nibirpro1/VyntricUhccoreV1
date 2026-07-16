@@ -6,6 +6,37 @@ branding:
   prefix: '&d[&fVyntric&5Uhc&d] &r'
   server-ip: 'play.myserver.com'
 
+# Preloads (generates) every chunk inside the world border the moment the
+# server starts, so the whole area the UHC border will ever shrink through
+# already exists before anyone plays. While this is running, anyone who
+# tries to join gets kicked with join-blocked-message below instead of
+# spawning into a half-loaded world.
+chunk-preload:
+  enabled: true
+  # Leave blank to use the server's default world. Set a name to target a
+  # specific world (e.g. a separate UHC world) instead.
+  world: ''
+  # How many chunks to request per period-ticks. Higher = faster preload
+  # but more load on the server while it's happening.
+  chunks-per-tick: 20
+  period-ticks: 1
+  # {percent} = current preload progress (0-100).
+  join-blocked-message: '&d[&fVyntric&5Uhc&d] &fServer is still loading the world (&e{percent}%&f). Please try again in a few minutes.'
+
+# Anti-camping for the deathmatch phase. Once the meetup timer hits zero and
+# the game enters the DEATHMATCH phase, anyone above height-limit takes
+# damage every second until they come back down, and can't place new blocks
+# above that height either — closes off sky-basing to dodge the fight.
+deathmatch:
+  enabled: true
+  # Y level. 90 keeps players well above ground fights but below typical
+  # skybase/tower heights — raise or lower to match your map/border size.
+  height-limit: 90
+  damage-per-second: 2.0
+  warning-message: '&c&lYou are too high! &fCome down or you will keep taking damage.'
+  # {limit} = the height-limit value above.
+  block-place-blocked-message: "&cYou can't build above Y={limit} during deathmatch."
+
 # Default timers (in seconds). These are the values used the FIRST time
 # the internal timer is started with /vuhc timer start.
 # After the game has started, use /vuhc meetup <time> and /vuhc pvp force
@@ -13,6 +44,27 @@ branding:
 timers:
   meetup-default-seconds: 1200   # 20 minutes
   pvp-default-seconds: 300       # 5 minutes
+
+# /vuhc start — scatters every online player to a random spot inside the
+# world border, freezes them in place for freeze-seconds, then releases
+# everyone at the same moment and starts the timer engine (same as
+# /vuhc timer start). This is the actual "begin the UHC game" command.
+scatter:
+  # Leave blank to use the server's default world.
+  world: ''
+  # How long players are frozen in place after being teleported, before
+  # they're allowed to move and start grinding.
+  freeze-seconds: 15
+  # Best-effort minimum distance (blocks) the scatter tries to keep between
+  # any two players' spawn points, so nobody starts right next to someone else.
+  min-distance-between-players: 100.0
+  # How many random spots to try per player while attempting to satisfy
+  # min-distance-between-players before settling for the best one found.
+  placement-attempts: 30
+  teleport-message: '&aScattering players across the map...'
+  # {seconds} = the freeze duration.
+  freeze-message: '&eYou are frozen for &f{seconds}&e seconds. Get ready!'
+  go-message: '&a&lGO! &fEveryone can move now — good luck!'
 
 login-system:
   enabled: true

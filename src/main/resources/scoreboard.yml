@@ -1,0 +1,49 @@
+# =========================================
+#   VyntricUhccoreV1  -  scoreboard.yml
+# =========================================
+# Everything shown on the sidebar scoreboard and tab list header/footer.
+# Edit this, then run /vuhc reload to apply changes without restarting.
+#
+# Placeholders you can use in sidebar lines:
+#   {players}   - online player count
+#   {phase}     - current game phase: Waiting to start / Grind Time / Active / DEATHMATCH
+#   {meetup}    - meetup/deathmatch timer, formatted mm:ss
+#   {pvp}       - PvP status: colored "ENABLED" once active, otherwise the countdown
+#   {kills}     - the viewing player's kill count
+#   {alive}     - number of players not in spectator mode
+#   {server_ip} - branding.server-ip from config.yml
+#
+# In tab header/footer you can also use {line} for the branded divider.
+# Use '&' for color codes. Each list entry is one line on the sidebar.
+
+sidebar:
+  title: '&d&lVYNTRIC &f&lUHC'
+
+  # Shown before the timer engine has been started (before /vuhc start).
+  waiting-lines:
+    - ' '
+    - '&7Players: &a{players}'
+    - '&7Status: &eWaiting to start'
+    - '  '
+    - '&d{server_ip}'
+
+  # Shown once the timer engine is running.
+  running-lines:
+    - ' '
+    - '&7Players: &a{players}'
+    - '&7Phase: {phase}'
+    - '&7Meetup: &a{meetup}'
+    - '&7PvP: {pvp}'
+    - ' '
+    - '&7Kills: &a{kills}'
+    - '&7Alive: &a{alive}'
+    - '  '
+    - '&d{server_ip}'
+
+tab:
+  header: '&d&lVYNTRIC &f&lUHC\n&5{line}'
+  footer: '&5{line}\n&7IP: &d{server_ip}'
+  # Name color in the tab list.
+  alive-color: '&a'
+  spectator-color: '&7'
+  divider: '▬▬▬▬▬▬▬▬▬▬▬▬▬'

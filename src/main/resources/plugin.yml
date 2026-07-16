@@ -9,7 +9,7 @@ softdepend: [PlaceholderAPI]
 commands:
   vuhc:
     description: Main VyntricUhc admin command
-    usage: /vuhc <meetup|pvp|timer|alts|track|revive|bounty|stats|top|announcement|reload>
+    usage: /vuhc <start|highlimit|border|meetup|pvp|timer|alts|track|revive|bounty|stats|top|announcement|reload>
     permission: vyntricuhc.admin
     aliases: [vuh]
   login:

@@ -42,6 +42,12 @@ public class VuhcCommand implements CommandExecutor, TabCompleter {
         }
 
         switch (args[0].toLowerCase()) {
+            case "start":
+                return handleStart(sender);
+            case "highlimit":
+                return handleHighLimit(sender, args);
+            case "border":
+                return handleBorder(sender, args);
             case "meetup":
                 return handleMeetup(sender, args);
             case "pvp":
@@ -65,12 +71,97 @@ public class VuhcCommand implements CommandExecutor, TabCompleter {
                 return handleAnnouncement(sender, args);
             case "reload":
                 plugin.reloadConfig();
-                Msg.send(sender, "&aConfig reloaded.");
+                com.vyntric.uhccore.utils.ConfigValidator.validate(plugin);
+                plugin.scoreboard().loadScoreboardConfig();
+                plugin.deathmatchCamp().loadConfig();
+                Msg.send(sender, "&aReloaded config.yml and scoreboard.yml.");
                 return true;
             default:
                 sendHelp(sender);
                 return true;
         }
+    }
+
+    private boolean handleStart(CommandSender sender) {
+        if (plugin.scatter().isScattering()) {
+            Msg.send(sender, "&eA scatter/start is already in progress.");
+            return true;
+        }
+        Msg.send(sender, "&aStarting the game — scattering all online players and starting the timers...");
+        plugin.scatter().scatterAndStart();
+        return true;
+    }
+
+    private boolean handleBorder(CommandSender sender, String[] args) {
+        // /vuhc border set <amount>                -> instant, e.g. 200 = 200x200
+        // /vuhc border set <amount> <timeduration>  -> shrinks/grows over that time
+        //    <timeduration> accepts plain seconds (600) or 10m/1h/90s format
+        if (args.length < 3 || !args[1].equalsIgnoreCase("set")) {
+            Msg.send(sender, "&cUsage: /vuhc border set <amount> [timeduration]  (e.g. /vuhc border set 200, or /vuhc border set 200 10m)");
+            return true;
+        }
+
+        double amount;
+        try {
+            amount = Double.parseDouble(args[2]);
+        } catch (NumberFormatException ex) {
+            Msg.send(sender, "&cInvalid amount - must be a number, e.g. /vuhc border set 200");
+            return true;
+        }
+        if (amount <= 0) {
+            Msg.send(sender, "&cAmount must be greater than 0.");
+            return true;
+        }
+
+        org.bukkit.World world = Bukkit.getWorlds().isEmpty() ? null : Bukkit.getWorlds().get(0);
+        if (world == null) {
+            Msg.send(sender, "&cCould not resolve a world to set the border on.");
+            return true;
+        }
+
+        org.bukkit.WorldBorder border = world.getWorldBorder();
+        border.setCenter(world.getSpawnLocation());
+
+        if (args.length >= 4) {
+            long seconds;
+            try {
+                seconds = Msg.parseTime(args[3]);
+            } catch (NumberFormatException ex) {
+                Msg.send(sender, "&cInvalid time value. Examples: 10m, 90s, 1h, or 600 (seconds).");
+                return true;
+            }
+            border.setSize(amount, seconds);
+            Msg.broadcast("&6The world border is now moving to &f" + (int) amount + "x" + (int) amount
+                    + "&6 over &f" + Msg.formatTime(seconds) + "&6.");
+        } else {
+            border.setSize(amount);
+            Msg.broadcast("&6The world border has been set to &f" + (int) amount + "x" + (int) amount + "&6.");
+        }
+        return true;
+    }
+
+    private boolean handleHighLimit(CommandSender sender, String[] args) {
+        // /vuhc highlimit <amount>       -> set directly
+        // /vuhc highlimit set <amount>   -> same thing, "set" is optional
+        if (args.length < 2) {
+            Msg.send(sender, "&7Current deathmatch height limit: &fY=" + plugin.deathmatchCamp().getHeightLimit());
+            Msg.send(sender, "&cUsage: /vuhc highlimit <amount>  (or /vuhc highlimit set <amount>)");
+            return true;
+        }
+
+        String amountArg = args[1].equalsIgnoreCase("set") && args.length >= 3 ? args[2] : args[1];
+
+        int amount;
+        try {
+            amount = Integer.parseInt(amountArg);
+        } catch (NumberFormatException ex) {
+            Msg.send(sender, "&cInvalid amount - must be a whole number, e.g. /vuhc highlimit 90");
+            return true;
+        }
+
+        plugin.deathmatchCamp().setHeightLimit(amount);
+        Msg.send(sender, "&aDeathmatch height limit set to &fY=" + amount + "&a.");
+        return true;
     }
 
     private boolean handleMeetup(CommandSender sender, String[] args) {
@@ -145,7 +236,8 @@ public class VuhcCommand implements CommandExecutor, TabCompleter {
                 Msg.send(sender, "&cTimer engine stopped.");
                 break;
             case "status":
-                Msg.send(sender, "&7Meetup: &f" + Msg.formatTime(plugin.timers().getMeetupSecondsLeft())
+                Msg.send(sender, "&7Phase: " + plugin.timers().getPhaseDisplay()
+                        + " &7| Meetup: &f" + Msg.formatTime(plugin.timers().getMeetupSecondsLeft())
                         + " &7| PvP: &f" + (plugin.timers().isPvpEnabled() ? "enabled" : Msg.formatTime(plugin.timers().getPvpSecondsLeft()))
                         + " &7| Running: &f" + plugin.timers().isRunning());
                 break;
@@ -303,6 +395,9 @@ public class VuhcCommand implements CommandExecutor, TabCompleter {
 
     private void sendHelp(CommandSender sender) {
         Msg.send(sender, "&d&lVyntricUhc &7commands:");
+        Msg.send(sender, "&f/vuhc start &7- scatter all online players to random spots and start the game (freezes them briefly)");
+        Msg.send(sender, "&f/vuhc highlimit <amount> &7- change the deathmatch height limit (Y level) on the fly");
+        Msg.send(sender, "&f/vuhc border set <amount> [timeduration] &7- set the world border (centered on spawn), instantly or over time");
         Msg.send(sender, "&f/vuhc meetup <time|add <t>|remove <t>> &7- set/change meetup timer, works mid-game");
         Msg.send(sender, "&f/vuhc pvp force &7- force start PvP immediately");
         Msg.send(sender, "&f/vuhc pvp reset <time> &7- reset the pre-PvP countdown");
@@ -314,13 +409,13 @@ public class VuhcCommand implements CommandExecutor, TabCompleter {
         Msg.send(sender, "&f/vuhc stats [player] &7- show saved kills/deaths/K-D for a player");
         Msg.send(sender, "&f/vuhc top <kills|deaths|kdr> &7- show the leaderboard");
         Msg.send(sender, "&f/vuhc announcement <message> &7- broadcast a big announcement to everyone");
-        Msg.send(sender, "&f/vuhc reload &7- reload config.yml");
+        Msg.send(sender, "&f/vuhc reload &7- reload config.yml and scoreboard.yml");
     }
 
     // ------------------------------------------------------------ tab complete
 
     private static final List<String> SUBCOMMANDS = Arrays.asList(
-            "meetup", "pvp", "timer", "alts", "track", "revive", "bounty", "stats", "top", "announcement", "reload");
+            "start", "highlimit", "border", "meetup", "pvp", "timer", "alts", "track", "revive", "bounty", "stats", "top", "announcement", "reload");
 
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
@@ -332,6 +427,10 @@ public class VuhcCommand implements CommandExecutor, TabCompleter {
 
         if (args.length == 2) {
             switch (args[0].toLowerCase()) {
+                case "highlimit":
+                    return filter(Arrays.asList("set", "60", "90", "120"), args[1]);
+                case "border":
+                    return filter(Arrays.asList("set"), args[1]);
                 case "meetup":
                     return filter(Arrays.asList("add", "remove", "10m", "5m", "1h"), args[1]);
                 case "pvp":
@@ -353,11 +452,23 @@ public class VuhcCommand implements CommandExecutor, TabCompleter {
         }
 
         if (args.length == 3) {
+            if (args[0].equalsIgnoreCase("highlimit") && args[1].equalsIgnoreCase("set")) {
+                return filter(Arrays.asList("60", "90", "120"), args[2]);
+            }
+            if (args[0].equalsIgnoreCase("border") && args[1].equalsIgnoreCase("set")) {
+                return filter(Arrays.asList("100", "200", "500", "1000"), args[2]);
+            }
             if (args[0].equalsIgnoreCase("meetup") && (args[1].equalsIgnoreCase("add") || args[1].equalsIgnoreCase("remove"))) {
                 return filter(Arrays.asList("30s", "1m", "5m", "10m"), args[2]);
             }
             if (args[0].equalsIgnoreCase("pvp") && args[1].equalsIgnoreCase("reset")) {
                 return filter(Arrays.asList("60s", "5m", "10m"), args[2]);
+            }
+        }
+
+        if (args.length == 4) {
+            if (args[0].equalsIgnoreCase("border") && args[1].equalsIgnoreCase("set")) {
+                return filter(Arrays.asList("5m", "10m", "30m", "1h"), args[3]);
             }
         }
 

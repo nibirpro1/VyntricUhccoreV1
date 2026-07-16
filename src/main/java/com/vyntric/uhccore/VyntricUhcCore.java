@@ -6,17 +6,23 @@ import com.vyntric.uhccore.commands.RegisterCommand;
 import com.vyntric.uhccore.commands.TrackCommand;
 import com.vyntric.uhccore.integration.VyntricPlaceholders;
 import com.vyntric.uhccore.listeners.BountyListener;
+import com.vyntric.uhccore.listeners.ChunkPreloadListener;
 import com.vyntric.uhccore.listeners.CrossTeamListener;
+import com.vyntric.uhccore.listeners.DeathmatchCampListener;
 import com.vyntric.uhccore.listeners.LeaveZombieListener;
 import com.vyntric.uhccore.listeners.LoginListener;
+import com.vyntric.uhccore.listeners.ScatterListener;
 import com.vyntric.uhccore.listeners.ScoreboardListener;
 import com.vyntric.uhccore.listeners.SpectatorListener;
 import com.vyntric.uhccore.listeners.StatsListener;
 import com.vyntric.uhccore.managers.AltsManager;
 import com.vyntric.uhccore.managers.BountyManager;
+import com.vyntric.uhccore.managers.ChunkPreloadManager;
 import com.vyntric.uhccore.managers.CrossTeamManager;
+import com.vyntric.uhccore.managers.DeathmatchCampManager;
 import com.vyntric.uhccore.managers.LeaveZombieManager;
 import com.vyntric.uhccore.managers.LoginManager;
+import com.vyntric.uhccore.managers.ScatterManager;
 import com.vyntric.uhccore.managers.ScoreboardManager;
 import com.vyntric.uhccore.managers.SpectatorManager;
 import com.vyntric.uhccore.managers.StatsManager;
@@ -61,6 +67,9 @@ public class VyntricUhcCore extends JavaPlugin {
     private SpectatorManager spectatorManager;
     private StatsManager statsManager;
     private BountyManager bountyManager;
+    private ChunkPreloadManager chunkPreloadManager;
+    private ScatterManager scatterManager;
+    private DeathmatchCampManager deathmatchCampManager;
 
     @Override
     public void onEnable() {
@@ -69,6 +78,11 @@ public class VyntricUhcCore extends JavaPlugin {
         ConfigValidator.validate(this);
 
         this.prefix = getConfig().getString("branding.prefix", "&d[&fVyntric&5Uhc&d] &r");
+
+        // Register + start this first so joins are blocked from the very first tick.
+        this.chunkPreloadManager = new ChunkPreloadManager(this);
+        getServer().getPluginManager().registerEvents(new ChunkPreloadListener(this), this);
+        this.chunkPreloadManager.start();
 
         this.timerManager = new TimerManager(this);
         this.altsManager = new AltsManager(this);
@@ -79,6 +93,8 @@ public class VyntricUhcCore extends JavaPlugin {
         this.spectatorManager = new SpectatorManager(this);
         this.statsManager = new StatsManager(this);
         this.bountyManager = new BountyManager(this);
+        this.scatterManager = new ScatterManager(this);
+        this.deathmatchCampManager = new DeathmatchCampManager(this);
 
         VuhcCommand vuhcCommand = new VuhcCommand(this);
         getCommand("vuhc").setExecutor(vuhcCommand);
@@ -94,9 +110,12 @@ public class VyntricUhcCore extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new SpectatorListener(this), this);
         getServer().getPluginManager().registerEvents(new StatsListener(this), this);
         getServer().getPluginManager().registerEvents(new BountyListener(this), this);
+        getServer().getPluginManager().registerEvents(new ScatterListener(this), this);
+        getServer().getPluginManager().registerEvents(new DeathmatchCampListener(this), this);
 
         this.scoreboardManager.start();
         this.crossTeamManager.start();
+        this.deathmatchCampManager.start();
 
         if (Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null) {
             new VyntricPlaceholders(this).register();
@@ -111,8 +130,10 @@ public class VyntricUhcCore extends JavaPlugin {
         if (altsManager != null) altsManager.save();
         if (loginManager != null) loginManager.save();
         if (timerManager != null) timerManager.stop();
+        if (chunkPreloadManager != null) chunkPreloadManager.stop();
         if (scoreboardManager != null) scoreboardManager.stop();
         if (crossTeamManager != null) crossTeamManager.stop();
+        if (deathmatchCampManager != null) deathmatchCampManager.stop();
         if (leaveZombieManager != null) leaveZombieManager.save();
         if (statsManager != null) statsManager.close();
         getLogger().info("VyntricUhccoreV1 disabled.");
@@ -160,5 +181,17 @@ public class VyntricUhcCore extends JavaPlugin {
 
     public BountyManager bounty() {
         return bountyManager;
+    }
+
+    public ChunkPreloadManager chunkPreload() {
+        return chunkPreloadManager;
+    }
+
+    public ScatterManager scatter() {
+        return scatterManager;
+    }
+
+    public DeathmatchCampManager deathmatchCamp() {
+        return deathmatchCampManager;
     }
 }

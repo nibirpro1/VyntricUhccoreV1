@@ -2,6 +2,33 @@
 
 A companion add-on plugin for your UHC server that adds:
 
+- **Game phases** — the plugin tracks four phases and broadcasts on every
+  transition, shown live on the scoreboard (`{phase}` placeholder) and via
+  `/vuhc timer status`:
+  1. **Waiting to start** — before `/vuhc start` (or `/vuhc timer start`).
+  2. **Grind Time** — game has started, PvP is off for
+     `timers.pvp-default-seconds` (default 5 min) so people can spread out
+     and gear up safely. Ends early with `/vuhc pvp force`, or change how
+     long it lasts (even mid-grind) with `/vuhc pvp reset <time>` — that's
+     the "set the PvP timer" command.
+  3. **Active** — PvP is on, meetup/deathmatch timer counting down.
+  4. **Deathmatch** — meetup timer hit zero; border should be closing in.
+     Broadcasts `DEATHMATCH PHASE has begun!` to everyone. From this point,
+     anyone above `deathmatch.height-limit` (default Y=90) takes damage every
+     second and can't place blocks up there either — no sky-basing to dodge
+     the fight. Configurable under `deathmatch:` in `config.yml`, and
+     changeable live with `/vuhc highlimit <amount>` (or
+     `/vuhc highlimit set <amount>`) — no reload or restart needed.
+- **`/vuhc border set <amount> [timeduration]`** — sets the world border,
+  centered on the world's spawn point. `/vuhc border set 200` instantly makes
+  it a 200x200 border; add a duration to shrink/grow into it over time
+  instead, e.g. `/vuhc border set 200 10m` or `/vuhc border set 200 600`
+  (plain seconds and `10m`/`1h`-style values both work).
+- **`/vuhc start`** — starts the actual UHC game: teleports every online player
+  to a random, spread-out spot inside the world border, freezes everyone in
+  place for `scatter.freeze-seconds` (default 15s) so nobody gets a head
+  start, then releases everyone at the same moment and starts the meetup/PvP
+  timer engine. Configurable under `scatter:` in `config.yml`.
 - **`/vuhc meetup <time>`** — set the meetup (deathmatch) timer to an exact value,
   or `/vuhc meetup add <time>` / `/vuhc meetup remove <time>` to adjust it.
   Works **while the game is already running**, not just before start.
@@ -22,7 +49,14 @@ A companion add-on plugin for your UHC server that adds:
 - **Custom sidebar scoreboard + tab list** — branded "VYNTRIC UHC" sidebar
   showing online players, live meetup/PvP timers, kills and alive count;
   tab list gets a branded header/footer plus green/gray name coloring for
-  alive vs. spectating players. Refreshes every second automatically.
+  alive vs. spectating players. Refreshes every second automatically. All of
+  the text/layout lives in `scoreboard.yml` (created next to `config.yml` in
+  the plugin's data folder on first run) so you can restyle it without
+  touching any code.
+- **`/vuhc reload`** — reloads both `config.yml` and `scoreboard.yml` from
+  disk on the fly (no server restart needed). Runs the same startup
+  validation as `onEnable`, so a bad value gets caught and logged instead of
+  silently breaking something.
 - **Cross-team ("teaming"/alliance) detector** — `/vuhc track <team>` or the
   standalone `/track <team>` (kept for muscle memory from the old
   Vyntric_Cross_Team_Tracker plugin, which this replaces). See
@@ -35,6 +69,13 @@ A companion add-on plugin for your UHC server that adds:
   they're teleported back. `/vuhc revive <player>` lets an admin clear a
   mistaken/griefed elimination. All of it is configurable under
   `leave-zombie:` in `config.yml`.
+
+- **Chunk preloader** — on server start, generates every chunk inside the
+  world border up front (the full area the UHC border will ever shrink
+  through), so nothing lags or half-loads later. While it's running, anyone
+  trying to join gets kicked with a "still loading, try again in a few
+  minutes" message instead of spawning into a half-generated world.
+  Configurable under `chunk-preload:` in `config.yml`.
 
 ## About the cross-team detector
 
