@@ -16,6 +16,12 @@ chunk-preload:
   # Leave blank to use the server's default world. Set a name to target a
   # specific world (e.g. a separate UHC world) instead.
   world: ''
+  # If the world doesn't have a real border set yet (i.e. it's still at
+  # vanilla's untouched default of 60,000,000 blocks), the plugin will
+  # automatically set the border to this size (centered on spawn) before
+  # preloading, instead of trying to preload the whole default border.
+  # Change this later any time with /vuhc border set <amount>.
+  default-border-size: 3000
   # How many chunks to request per period-ticks. Higher = faster preload
   # but more load on the server while it's happening.
   chunks-per-tick: 20
