@@ -1,0 +1,164 @@
+package com.vyntric.uhccore;
+
+import com.vyntric.uhccore.commands.VuhcCommand;
+import com.vyntric.uhccore.commands.LoginCommand;
+import com.vyntric.uhccore.commands.RegisterCommand;
+import com.vyntric.uhccore.commands.TrackCommand;
+import com.vyntric.uhccore.integration.VyntricPlaceholders;
+import com.vyntric.uhccore.listeners.BountyListener;
+import com.vyntric.uhccore.listeners.CrossTeamListener;
+import com.vyntric.uhccore.listeners.LeaveZombieListener;
+import com.vyntric.uhccore.listeners.LoginListener;
+import com.vyntric.uhccore.listeners.ScoreboardListener;
+import com.vyntric.uhccore.listeners.SpectatorListener;
+import com.vyntric.uhccore.listeners.StatsListener;
+import com.vyntric.uhccore.managers.AltsManager;
+import com.vyntric.uhccore.managers.BountyManager;
+import com.vyntric.uhccore.managers.CrossTeamManager;
+import com.vyntric.uhccore.managers.LeaveZombieManager;
+import com.vyntric.uhccore.managers.LoginManager;
+import com.vyntric.uhccore.managers.ScoreboardManager;
+import com.vyntric.uhccore.managers.SpectatorManager;
+import com.vyntric.uhccore.managers.StatsManager;
+import com.vyntric.uhccore.managers.TimerManager;
+import com.vyntric.uhccore.utils.ConfigValidator;
+import org.bukkit.Bukkit;
+import org.bukkit.plugin.java.JavaPlugin;
+
+/**
+ * VyntricUhccoreV1
+ * Branding: VyntricUhc
+ *
+ * All-in-one add-on for UHC-Core style servers. Adds:
+ *  - /vuhc meetup <time>   -> set/change the meetup (deathmatch) timer, even mid-game
+ *  - /vuhc pvp force       -> force-start PvP immediately, skipping the normal 5 min wait
+ *  - /vuhc timer start|stop-> starts/stops this plugin's own timer engine
+ *  - Alt account detector (IP based, alerts staff)
+ *  - Simple register/login system
+ *  - Cross-team ("teaming"/alliance) detector — /vuhc track <team> or /track <team>
+ *    (this absorbs and replaces the old standalone Vyntric_Cross_Team_Tracker plugin;
+ *    see CrossTeamManager for what changed and why)
+ *  - Leave-becomes-zombie: once the game has started, a player who disconnects is
+ *    replaced by a real zombie at their spot. Get killed while offline -> eliminated
+ *    (dropped into spectator on rejoin). Rejoin before it's killed -> safe, teleported
+ *    back. See LeaveZombieManager.
+ *
+ * NOTE: This runs its own independent timer + broadcast engine (it does not require
+ * reflection into UHC-Core's internal classes, since those aren't guaranteed stable
+ * across versions/forks). It reads/writes its own data files under the plugin folder.
+ */
+public class VyntricUhcCore extends JavaPlugin {
+
+    private static VyntricUhcCore instance;
+
+    private String prefix;
+    private TimerManager timerManager;
+    private AltsManager altsManager;
+    private LoginManager loginManager;
+    private ScoreboardManager scoreboardManager;
+    private CrossTeamManager crossTeamManager;
+    private LeaveZombieManager leaveZombieManager;
+    private SpectatorManager spectatorManager;
+    private StatsManager statsManager;
+    private BountyManager bountyManager;
+
+    @Override
+    public void onEnable() {
+        instance = this;
+        saveDefaultConfig();
+        ConfigValidator.validate(this);
+
+        this.prefix = getConfig().getString("branding.prefix", "&d[&fVyntric&5Uhc&d] &r");
+
+        this.timerManager = new TimerManager(this);
+        this.altsManager = new AltsManager(this);
+        this.loginManager = new LoginManager(this);
+        this.scoreboardManager = new ScoreboardManager(this);
+        this.crossTeamManager = new CrossTeamManager(this);
+        this.leaveZombieManager = new LeaveZombieManager(this);
+        this.spectatorManager = new SpectatorManager(this);
+        this.statsManager = new StatsManager(this);
+        this.bountyManager = new BountyManager(this);
+
+        VuhcCommand vuhcCommand = new VuhcCommand(this);
+        getCommand("vuhc").setExecutor(vuhcCommand);
+        getCommand("vuhc").setTabCompleter(vuhcCommand);
+        getCommand("login").setExecutor(new LoginCommand(this));
+        getCommand("register").setExecutor(new RegisterCommand(this));
+        getCommand("track").setExecutor(new TrackCommand(this));
+
+        getServer().getPluginManager().registerEvents(new LoginListener(this), this);
+        getServer().getPluginManager().registerEvents(new ScoreboardListener(this), this);
+        getServer().getPluginManager().registerEvents(new CrossTeamListener(this), this);
+        getServer().getPluginManager().registerEvents(new LeaveZombieListener(this), this);
+        getServer().getPluginManager().registerEvents(new SpectatorListener(this), this);
+        getServer().getPluginManager().registerEvents(new StatsListener(this), this);
+        getServer().getPluginManager().registerEvents(new BountyListener(this), this);
+
+        this.scoreboardManager.start();
+        this.crossTeamManager.start();
+
+        if (Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null) {
+            new VyntricPlaceholders(this).register();
+            getLogger().info("PlaceholderAPI found - %vyntric_*% placeholders registered.");
+        }
+
+        getLogger().info("VyntricUhccoreV1 enabled — branding: VyntricUhc");
+    }
+
+    @Override
+    public void onDisable() {
+        if (altsManager != null) altsManager.save();
+        if (loginManager != null) loginManager.save();
+        if (timerManager != null) timerManager.stop();
+        if (scoreboardManager != null) scoreboardManager.stop();
+        if (crossTeamManager != null) crossTeamManager.stop();
+        if (leaveZombieManager != null) leaveZombieManager.save();
+        if (statsManager != null) statsManager.close();
+        getLogger().info("VyntricUhccoreV1 disabled.");
+    }
+
+    public static VyntricUhcCore get() {
+        return instance;
+    }
+
+    public String prefix() {
+        return prefix;
+    }
+
+    public TimerManager timers() {
+        return timerManager;
+    }
+
+    public AltsManager alts() {
+        return altsManager;
+    }
+
+    public LoginManager login() {
+        return loginManager;
+    }
+
+    public ScoreboardManager scoreboard() {
+        return scoreboardManager;
+    }
+
+    public CrossTeamManager crossTeam() {
+        return crossTeamManager;
+    }
+
+    public LeaveZombieManager leaveZombies() {
+        return leaveZombieManager;
+    }
+
+    public SpectatorManager spectator() {
+        return spectatorManager;
+    }
+
+    public StatsManager stats() {
+        return statsManager;
+    }
+
+    public BountyManager bounty() {
+        return bountyManager;
+    }
+}

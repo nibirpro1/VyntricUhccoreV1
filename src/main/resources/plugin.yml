@@ -1,0 +1,44 @@
+name: VyntricUhccoreV1
+version: '1.1.0'
+main: com.vyntric.uhccore.VyntricUhcCore
+api-version: '1.21'
+author: VyntricUhc
+description: VyntricUhc UHC add-on - meetup/PvP timer control, alt detector, login system and cross-team detector.
+softdepend: [PlaceholderAPI]
+
+commands:
+  vuhc:
+    description: Main VyntricUhc admin command
+    usage: /vuhc <meetup|pvp|timer|alts|track|revive|bounty|stats|top|announcement|reload>
+    permission: vyntricuhc.admin
+    aliases: [vuh]
+  login:
+    description: Log in to your account
+    usage: /login <password>
+  register:
+    description: Register a new account
+    usage: /register <password> <confirmPassword>
+  track:
+    description: Cross-team (alliance) suspicion report for a team
+    usage: /track <team>
+    permission: vyntricuhc.crossteam
+
+permissions:
+  vyntricuhc.admin:
+    description: Access to all VyntricUhc admin commands
+    default: op
+  vyntricuhc.altalert:
+    description: Receive alt-account join alerts
+    default: op
+  vyntricuhc.crossteam:
+    description: Use /track and /vuhc track to view cross-team reports
+    default: op
+  vyntricuhc.crossteamalert:
+    description: Receive automatic cross-team ("teaming") suspicion alerts
+    default: op
+  vyntricuhc.bounty:
+    description: Place bounties on players with /vuhc bounty
+    default: op
+  vyntricuhc.stats:
+    description: View /vuhc stats and /vuhc top leaderboards
+    default: true

@@ -1,0 +1,120 @@
+# =========================================
+#   VyntricUhccoreV1  -  by VyntricUhc
+# =========================================
+
+branding:
+  prefix: '&d[&fVyntric&5Uhc&d] &r'
+  server-ip: 'play.myserver.com'
+
+# Default timers (in seconds). These are the values used the FIRST time
+# the internal timer is started with /vuhc timer start.
+# After the game has started, use /vuhc meetup <time> and /vuhc pvp force
+# at any time to change them on the fly.
+timers:
+  meetup-default-seconds: 1200   # 20 minutes
+  pvp-default-seconds: 300       # 5 minutes
+
+login-system:
+  enabled: true
+  # Seconds a player has to /login or /register before being kicked
+  timeout-seconds: 60
+  # Minimum password length
+  min-password-length: 4
+  # Freeze (no movement/interaction) until logged in
+  freeze-until-logged-in: true
+
+alts-detector:
+  enabled: true
+  # Alert staff with permission vyntricuhc.altalert when a duplicate IP joins
+  alert-staff: true
+  # Also broadcast a warning to the joining player's screen (title)
+  notify-player: false
+
+# Cross-team ("teaming"/alliance) detector.
+# Replaces the old standalone Vyntric_Cross_Team_Tracker plugin. Instead of only
+# counting hits (which stays at 0 for two teams that simply never fight - the
+# actual definition of teaming), this tracks proximity time between different
+# teams AND combat between them, then flags pairs that spend a lot of time
+# together while barely ever fighting.
+cross-team-tracker:
+  enabled: true
+  # Blocks. Two players of different teams within this distance count as "near".
+  proximity-radius: 15.0
+  # A team pair needs at least this many seconds of recorded proximity before
+  # it's eligible to be flagged at all (avoids false positives on a brief pass-by).
+  min-proximity-seconds: 90
+  # If hits / proximity-seconds is at or below this ratio, the pair is considered
+  # suspicious (0.05 = roughly 1 hit per 20 seconds spent near each other or less).
+  max-hit-ratio: 0.05
+  # Minimum time between repeat alerts for the same team pair, so staff chat
+  # doesn't get spammed while two teams continue sitting next to each other.
+  alert-cooldown-seconds: 300
+
+# Leave-becomes-zombie: once the game has started, a player who disconnects is
+# replaced by a real zombie standing at their exact spot instead of just safely
+# vanishing.
+#   - If someone kills that zombie before the owner reconnects, the owner is
+#     marked eliminated and dropped into spectator mode when they rejoin.
+#   - If the owner reconnects while their zombie is still alive, the zombie is
+#     removed and they're teleported back — no harm done.
+# Data survives restarts (leave-zombies.yml in the plugin folder).
+leave-zombie:
+  enabled: true
+  # Only spawn the zombie if the game is actually running (started with
+  # /vuhc timer start). Set to false to make it apply from the moment the
+  # plugin loads, even before the game officially starts.
+  require-game-running: true
+  # Show the offline player's name above the zombie's head
+  show-nameplate: true
+  # Stop the zombie from insta-dying to sunlight so it can actually be hunted down
+  prevent-daylight-burn: true
+  # Teleport the player back to where their zombie was standing if they rejoin safely
+  teleport-back-on-safe-rejoin: true
+  # Announce in chat when someone is eliminated this way
+  broadcast-elimination: true
+
+# Auto-spectator: the moment a player dies (while online, actual PlayerDeathEvent -
+# not the offline leave-zombie case above, which already forces spectator itself)
+# they're dropped into spectator mode on respawn so they can keep watching the
+# game instead of getting a normal survival respawn.
+spectator-mode:
+  enabled: true
+  # Only auto-spectate once the game is actually running (see timers above).
+  require-game-running: true
+  # Message sent to the player the moment they become a spectator.
+  message: '&7You died and are now spectating. Enjoy the rest of the show!'
+  # Broadcast to everyone when a player drops into spectator mode this way.
+  broadcast-elimination: true
+
+# Game stats / leaderboard persistence. Kills, deaths and K/D ratio are saved here
+# so they survive restarts, and can be queried with /vuhc stats <player> and
+# /vuhc top <kills|deaths|kdr>. Also feeds the PlaceholderAPI expansion below.
+stats-database:
+  # 'sqlite' (default, zero setup - stored in a .db file in the plugin folder)
+  # or 'mysql' (fill in the connection details below).
+  type: 'sqlite'
+  sqlite:
+    file: 'stats.db'
+  mysql:
+    host: 'localhost'
+    port: 3306
+    database: 'vyntricuhc'
+    username: 'root'
+    password: ''
+    # Extra JDBC parameters appended to the connection URL.
+    useSSL: false
+
+# Bounty system. /vuhc bounty <player> opens a chest for the sender to drop items
+# into as the reward pool; closing the chest confirms it and puts a bounty on that
+# player's head. Whoever lands the killing blow on a bountied player receives the
+# items in the pool (dropped on the ground if their inventory is full).
+bounty:
+  enabled: true
+  # Title shown on the bounty-setup chest GUI. {player} = the target's name.
+  gui-title: '&5Bounty on {player}'
+  # Rows in the bounty-setup chest (1-6). More rows = bigger reward pool possible.
+  gui-rows: 3
+  # If a player already has a bounty, should new items placed via /vuhc bounty
+  # be merged into the existing pool (true) or replace it entirely (false)?
+  stack-bounties: true
+
