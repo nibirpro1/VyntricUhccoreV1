@@ -54,6 +54,9 @@ public class RegisterCommand implements CommandExecutor {
         plugin.login().register(player, pass);
         plugin.login().setLoggedIn(player, true);
         Msg.send(player, "&aRegistration successful! You are now logged in.");
+        if (plugin.lobby().isEnabled() && plugin.timers().getPhase() == com.vyntric.uhccore.managers.TimerManager.Phase.WAITING) {
+            plugin.lobby().sendToLobby(player);
+        }
         return true;
     }
 }

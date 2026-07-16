@@ -1,0 +1,46 @@
+# =========================================
+#   VyntricUhccoreV1  -  waiting-lobby kits
+# =========================================
+#
+# Right-clicking the kit-selector item (see config.yml -> lobby.kit-selector)
+# while standing in the waiting lobby opens a menu built from the list below.
+# Pick a keyword for each kit (not shown in game) and fill in:
+#
+#   symbol.material -> item shown in the kit-selection menu (any Bukkit Material name)
+#   symbol.name     -> display name of that menu item (supports & color codes)
+#   symbol.lore     -> extra description lines shown under the name (optional)
+#   permission      -> leave blank ('') for no permission required, or a node like
+#                       'vyntricuhc.kit.tools' to restrict this kit to certain players
+#   items            -> list of { material, amount } given to the player when picked
+#
+# Run /vuhc reload after editing this file to apply changes without a restart.
+# To remove all kits, change the top line to: kits: {}
+
+kits:
+  tools:
+    symbol:
+      material: STONE_PICKAXE
+      name: '&aKit Tools'
+      lore:
+        - '&7A basic mining/fighting starter kit.'
+    permission: ''
+    items:
+      - material: STONE_SWORD
+        amount: 1
+      - material: STONE_PICKAXE
+        amount: 1
+      - material: STONE_AXE
+        amount: 1
+
+  ench:
+    symbol:
+      material: ENCHANTED_BOOK
+      name: '&aKit Enchanting'
+      lore:
+        - '&7A head start on enchanting materials.'
+    permission: ''
+    items:
+      - material: PAPER
+        amount: 15
+      - material: LEATHER
+        amount: 5

@@ -66,6 +66,38 @@ scatter:
   freeze-message: '&eYou are frozen for &f{seconds}&e seconds. Get ready!'
   go-message: '&a&lGO! &fEveryone can move now — good luck!'
 
+# Waiting lobby: a sealed glass box built automatically at the location below
+# every time the plugin (re)starts, since auto-build is true. Players who join
+# (or finish logging in, if login-system is enabled) before /vuhc start is run
+# are teleported inside and given the kit-selector item — right-clicking it
+# opens the kit menu defined in kits.yml. The box is glass on all sides so
+# players can see the world while they wait, and is protected from being
+# broken/built on while the game is in the WAITING phase.
+lobby:
+  enabled: true
+  # Build the box automatically in onEnable. Set to false if you'd rather build
+  # it yourself and only use /vuhc lobby rebuild on demand.
+  auto-build: true
+  # Leave blank to use the server's default world.
+  world: ''
+  # Center of the box, floor level. Make sure this spot (and the air above it,
+  # up to lobby.height) is clear before the first build.
+  x: 0
+  y: 100
+  z: 0
+  # Floor footprint in blocks (10 = a 10x10 floor).
+  size: 10
+  # Height of the glass walls, in blocks, above the floor.
+  height: 4
+  glass-material: 'GLASS'
+  floor-material: 'GLASS'
+  # Teleport players into the lobby the moment they join/log in, while the
+  # game hasn't started yet.
+  teleport-on-join: true
+  kit-selector:
+    material: 'COMPASS'
+    name: '&aRight click to choose a kit'
+
 login-system:
   enabled: true
   # Seconds a player has to /login or /register before being kicked

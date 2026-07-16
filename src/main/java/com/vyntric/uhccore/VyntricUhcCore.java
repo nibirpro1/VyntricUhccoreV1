@@ -9,7 +9,9 @@ import com.vyntric.uhccore.listeners.BountyListener;
 import com.vyntric.uhccore.listeners.ChunkPreloadListener;
 import com.vyntric.uhccore.listeners.CrossTeamListener;
 import com.vyntric.uhccore.listeners.DeathmatchCampListener;
+import com.vyntric.uhccore.listeners.KitListener;
 import com.vyntric.uhccore.listeners.LeaveZombieListener;
+import com.vyntric.uhccore.listeners.LobbyListener;
 import com.vyntric.uhccore.listeners.LoginListener;
 import com.vyntric.uhccore.listeners.ScatterListener;
 import com.vyntric.uhccore.listeners.ScoreboardListener;
@@ -20,7 +22,9 @@ import com.vyntric.uhccore.managers.BountyManager;
 import com.vyntric.uhccore.managers.ChunkPreloadManager;
 import com.vyntric.uhccore.managers.CrossTeamManager;
 import com.vyntric.uhccore.managers.DeathmatchCampManager;
+import com.vyntric.uhccore.managers.KitManager;
 import com.vyntric.uhccore.managers.LeaveZombieManager;
+import com.vyntric.uhccore.managers.LobbyManager;
 import com.vyntric.uhccore.managers.LoginManager;
 import com.vyntric.uhccore.managers.ScatterManager;
 import com.vyntric.uhccore.managers.ScoreboardManager;
@@ -70,6 +74,8 @@ public class VyntricUhcCore extends JavaPlugin {
     private ChunkPreloadManager chunkPreloadManager;
     private ScatterManager scatterManager;
     private DeathmatchCampManager deathmatchCampManager;
+    private LobbyManager lobbyManager;
+    private KitManager kitManager;
 
     @Override
     public void onEnable() {
@@ -95,6 +101,8 @@ public class VyntricUhcCore extends JavaPlugin {
         this.bountyManager = new BountyManager(this);
         this.scatterManager = new ScatterManager(this);
         this.deathmatchCampManager = new DeathmatchCampManager(this);
+        this.lobbyManager = new LobbyManager(this);
+        this.kitManager = new KitManager(this);
 
         VuhcCommand vuhcCommand = new VuhcCommand(this);
         getCommand("vuhc").setExecutor(vuhcCommand);
@@ -112,6 +120,12 @@ public class VyntricUhcCore extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new BountyListener(this), this);
         getServer().getPluginManager().registerEvents(new ScatterListener(this), this);
         getServer().getPluginManager().registerEvents(new DeathmatchCampListener(this), this);
+        getServer().getPluginManager().registerEvents(new LobbyListener(this), this);
+        getServer().getPluginManager().registerEvents(new KitListener(this), this);
+
+        if (lobbyManager.isEnabled() && lobbyManager.isAutoBuild()) {
+            lobbyManager.build();
+        }
 
         this.scoreboardManager.start();
         this.crossTeamManager.start();
@@ -193,5 +207,13 @@ public class VyntricUhcCore extends JavaPlugin {
 
     public DeathmatchCampManager deathmatchCamp() {
         return deathmatchCampManager;
+    }
+
+    public LobbyManager lobby() {
+        return lobbyManager;
+    }
+
+    public KitManager kits() {
+        return kitManager;
     }
 }

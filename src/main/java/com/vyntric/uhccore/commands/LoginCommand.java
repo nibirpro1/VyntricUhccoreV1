@@ -46,6 +46,9 @@ public class LoginCommand implements CommandExecutor {
         if (plugin.login().checkPassword(player, args[0])) {
             plugin.login().setLoggedIn(player, true);
             Msg.send(player, "&aLogin successful. Welcome back!");
+            if (plugin.lobby().isEnabled() && plugin.timers().getPhase() == com.vyntric.uhccore.managers.TimerManager.Phase.WAITING) {
+                plugin.lobby().sendToLobby(player);
+            }
         } else {
             Msg.send(player, "&cIncorrect password.");
         }

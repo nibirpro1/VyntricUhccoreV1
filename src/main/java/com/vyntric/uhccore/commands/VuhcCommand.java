@@ -69,12 +69,17 @@ public class VuhcCommand implements CommandExecutor, TabCompleter {
             case "announcement":
             case "announce":
                 return handleAnnouncement(sender, args);
+            case "lobby":
+                return handleLobby(sender, args);
             case "reload":
                 plugin.reloadConfig();
                 com.vyntric.uhccore.utils.ConfigValidator.validate(plugin);
                 plugin.scoreboard().loadScoreboardConfig();
                 plugin.deathmatchCamp().loadConfig();
-                Msg.send(sender, "&aReloaded config.yml and scoreboard.yml.");
+                plugin.lobby().reloadLocation();
+                plugin.kits().load();
+                Msg.send(sender, "&aReloaded config.yml, scoreboard.yml and kits.yml. "
+                        + "(Run /vuhc lobby rebuild if you changed the lobby's location/size.)");
                 return true;
             default:
                 sendHelp(sender);
@@ -313,6 +318,20 @@ public class VuhcCommand implements CommandExecutor, TabCompleter {
         return true;
     }
 
+    private boolean handleLobby(CommandSender sender, String[] args) {
+        if (!plugin.lobby().isEnabled()) {
+            Msg.send(sender, "&cThe waiting lobby is disabled in config.yml (lobby.enabled: false).");
+            return true;
+        }
+        if (args.length < 2 || !args[1].equalsIgnoreCase("rebuild")) {
+            Msg.send(sender, "&cUsage: /vuhc lobby rebuild");
+            return true;
+        }
+        plugin.lobby().build();
+        Msg.send(sender, "&aWaiting lobby rebuilt at the location set in config.yml.");
+        return true;
+    }
+
     private boolean handleStats(CommandSender sender, String[] args) {
         if (!plugin.stats().isAvailable()) {
             Msg.send(sender, "&cStats persistence isn't available right now (database connection failed on startup).");
@@ -409,13 +428,14 @@ public class VuhcCommand implements CommandExecutor, TabCompleter {
         Msg.send(sender, "&f/vuhc stats [player] &7- show saved kills/deaths/K-D for a player");
         Msg.send(sender, "&f/vuhc top <kills|deaths|kdr> &7- show the leaderboard");
         Msg.send(sender, "&f/vuhc announcement <message> &7- broadcast a big announcement to everyone");
-        Msg.send(sender, "&f/vuhc reload &7- reload config.yml and scoreboard.yml");
+        Msg.send(sender, "&f/vuhc lobby rebuild &7- rebuild the waiting-lobby glass box from config.yml");
+        Msg.send(sender, "&f/vuhc reload &7- reload config.yml, scoreboard.yml and kits.yml");
     }
 
     // ------------------------------------------------------------ tab complete
 
     private static final List<String> SUBCOMMANDS = Arrays.asList(
-            "start", "highlimit", "border", "meetup", "pvp", "timer", "alts", "track", "revive", "bounty", "stats", "top", "announcement", "reload");
+            "start", "highlimit", "border", "meetup", "pvp", "timer", "alts", "track", "revive", "bounty", "stats", "top", "announcement", "lobby", "reload");
 
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
@@ -444,6 +464,8 @@ public class VuhcCommand implements CommandExecutor, TabCompleter {
                     return filter(onlinePlayerNames(), args[1]);
                 case "top":
                     return filter(Arrays.asList("kills", "deaths", "kdr"), args[1]);
+                case "lobby":
+                    return filter(Arrays.asList("rebuild"), args[1]);
                 case "track":
                     return filter(teamNames(), args[1]);
                 default:

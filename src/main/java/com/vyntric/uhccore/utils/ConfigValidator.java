@@ -32,6 +32,13 @@ public final class ConfigValidator {
         issues += checkDoubleRange(plugin, cfg, "cross-team-tracker.max-hit-ratio", 0.05, 0.0, 1.0);
         issues += checkLongMin(plugin, cfg, "cross-team-tracker.alert-cooldown-seconds", 300, 0);
 
+        issues += checkIntMin(plugin, cfg, "lobby.size", 10, 3);
+        issues += checkIntMin(plugin, cfg, "lobby.height", 4, 1);
+        issues += checkString(plugin, cfg, "lobby.glass-material", "GLASS", false);
+        issues += checkString(plugin, cfg, "lobby.floor-material", "GLASS", false);
+        issues += checkString(plugin, cfg, "lobby.kit-selector.material", "COMPASS", false);
+        issues += checkString(plugin, cfg, "lobby.kit-selector.name", "&aRight click to choose a kit", false);
+
         issues += checkOneOf(plugin, cfg, "stats-database.type", "sqlite", "sqlite", "mysql");
         issues += checkIntRange(plugin, cfg, "bounty.gui-rows", 3, 1, 6);
         issues += checkString(plugin, cfg, "bounty.gui-title", "&5Bounty on {player}", false);
